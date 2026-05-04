@@ -1,0 +1,101 @@
+{{ define "main" }}
+<section class="page">
+  <header class="page-head">
+    <h1 class="page-title">{{ if eq .Kind "term" }}#{{ .Title | lower }}{{ else }}{{ .Title }}{{ end }}</h1>
+    {{- with .Description }}<p class="page-desc">{{ . }}</p>{{ end }}
+  </header>
+
+  {{- if eq .Section "posts" }}
+  <aside class="archive-note" aria-label="Archivo histórico">
+    <span class="archive-note-icon" aria-hidden="true">■</span>
+    <p class="archive-note-body">
+      Las publicaciones muy viejunas están disponibles en
+      <a href="https://medium.com/@achetronic" rel="noopener" target="_blank">Medium<span class="archive-note-arrow" aria-hidden="true">↗</span></a>
+    </p>
+  </aside>
+
+  {{- $tags := .Site.Taxonomies.tags -}}
+  {{- if $tags }}
+  <details class="filter">
+    <summary class="filter-summary">
+      <span class="filter-toggle"></span>
+      <span class="filter-label">Filtrar por etiqueta</span>
+      <span class="filter-count">{{ len $tags }}</span>
+    </summary>
+    <div class="filter-body">
+      <ul class="tag-cloud">
+        {{- range $name, $taxonomy := $tags }}
+        <li><a href="{{ "/tags/" | relURL }}{{ $name | urlize }}" class="tag">{{ $name }} <span class="tag-count">{{ len $taxonomy.Pages }}</span></a></li>
+        {{- end }}
+      </ul>
+    </div>
+  </details>
+  {{- end }}
+  {{- end }}
+
+  {{- if eq .Kind "taxonomy" -}}
+    {{- $terms := .Data.Terms.Alphabetical -}}
+    {{- if $terms }}
+    <ul class="tag-cloud tag-cloud-large">
+      {{- range $terms }}
+      <li><a href="{{ .Page.RelPermalink }}" class="tag">{{ .Page.Title | lower }} <span class="tag-count">{{ .Count }}</span></a></li>
+      {{- end }}
+    </ul>
+    {{- else }}
+    <p class="muted">vacío</p>
+    {{- end }}
+  {{- else -}}
+    {{- $allPages := cond (eq .Kind "term") .Pages .RegularPages -}}
+    {{- $total := len $allPages -}}
+    {{- $paginator := .Paginate $allPages -}}
+    {{- $pages := $paginator.Pages -}}
+    {{- if $pages }}
+    <div class="post-grid">
+      {{- range $i, $p := $pages }}
+      {{- $globalIdx := sub $total (add (mul (sub $paginator.PageNumber 1) $paginator.PagerSize) $i) -}}
+      <a href="{{ $p.RelPermalink }}" class="post-card">
+        <span class="post-card-num">{{ printf "%02d" $globalIdx }}</span>
+        <h2 class="post-card-title">{{ $p.Title }}</h2>
+        {{- with $p.Description }}<p class="post-card-desc">{{ . }}</p>{{ end }}
+        <div class="post-card-foot">
+          <time class="post-card-date" datetime="{{ $p.Date.Format "2006-01-02" }}">{{ $p.Date.Format "02 Jan 2006" | lower }}</time>
+          {{- with $p.Params.tags }}
+          <ul class="post-card-tags">
+            {{- range . }}<li>#{{ . }}</li>{{ end }}
+          </ul>
+          {{- end }}
+        </div>
+        <span class="post-card-arrow">
+          <svg class="post-card-square" viewBox="0 0 100 100" aria-hidden="true">
+            <rect x="3" y="3" width="94" height="94" fill="none" stroke="currentColor"
+                  stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                  vector-effect="non-scaling-stroke"
+                  pathLength="100"/>
+          </svg>
+          <span class="post-card-arrow-glyph">→</span>
+        </span>
+      </a>
+      {{- end }}
+    </div>
+
+    {{- if gt $paginator.TotalPages 1 }}
+    <nav class="pager" aria-label="Paginación">
+      {{- if $paginator.HasPrev }}
+      <a class="pager-link pager-prev" href="{{ $paginator.Prev.URL }}" rel="prev">← Anterior</a>
+      {{- else }}
+      <span class="pager-link pager-disabled" aria-disabled="true">← Anterior</span>
+      {{- end }}
+      <span class="pager-meta">Página {{ $paginator.PageNumber }} / {{ $paginator.TotalPages }}</span>
+      {{- if $paginator.HasNext }}
+      <a class="pager-link pager-next" href="{{ $paginator.Next.URL }}" rel="next">Siguiente →</a>
+      {{- else }}
+      <span class="pager-link pager-disabled" aria-disabled="true">Siguiente →</span>
+      {{- end }}
+    </nav>
+    {{- end }}
+    {{- else }}
+    <p class="muted">vacío</p>
+    {{- end }}
+  {{- end }}
+</section>
+{{ end }}

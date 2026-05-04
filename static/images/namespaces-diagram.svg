@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 280" role="img" aria-label="Diagrama de namespaces de Linux">
+  <style>
+    .bg     { fill: #0a0a0a; }
+    .box    { fill: none; stroke: #2a2a2a; stroke-width: 1; }
+    .box-hl { fill: none; stroke: #f0f0f0; stroke-width: 1.5; }
+    .label  { fill: #f0f0f0; font: 600 13px "Geist Mono", ui-monospace, monospace; letter-spacing: 0.04em; }
+    .sub    { fill: #888888; font: 400 11px "Geist Mono", ui-monospace, monospace; }
+    .ns     { fill: #c8c8c8; font: 500 12px "Geist Mono", ui-monospace, monospace; }
+    .pid    { fill: #c5d96a; font: 500 12px "Geist Mono", ui-monospace, monospace; }
+    .line   { stroke: #2a2a2a; stroke-width: 1; fill: none; }
+  </style>
+
+  <rect class="bg" width="760" height="280"/>
+
+  <!-- host -->
+  <rect class="box-hl" x="0.75" y="0.75" width="758.5" height="278.5"/>
+  <text class="label" x="20" y="28">host</text>
+  <text class="sub" x="20" y="44">PID 1 · init / systemd</text>
+
+  <line class="line" x1="0" y1="60" x2="760" y2="60"/>
+
+  <!-- container A -->
+  <rect class="box" x="36" y="84" width="320" height="170"/>
+  <text class="ns" x="52" y="108">container_a</text>
+  <text class="sub" x="52" y="124">runc · containerd</text>
+
+  <line class="line" x1="36" y1="139" x2="356" y2="139"/>
+
+  <text class="sub" x="52" y="164">namespaces:</text>
+  <text class="ns"  x="52" y="184">pid · net · mnt</text>
+  <text class="ns"  x="52" y="202">uts · ipc · user</text>
+
+  <line class="line" x1="36" y1="220" x2="356" y2="220"/>
+
+  <text class="sub" x="52" y="244">cgroup.memory.max · 512M</text>
+
+  <!-- container B -->
+  <rect class="box" x="404" y="84" width="320" height="170"/>
+  <text class="ns" x="420" y="108">container_b</text>
+  <text class="sub" x="420" y="124">runc · containerd</text>
+
+  <line class="line" x1="404" y1="139" x2="724" y2="139"/>
+
+  <text class="sub" x="420" y="164">namespaces:</text>
+  <text class="ns"  x="420" y="184">pid · net · mnt</text>
+  <text class="ns"  x="420" y="202">uts · ipc · user</text>
+
+  <line class="line" x1="404" y1="220" x2="724" y2="220"/>
+
+  <text class="sub" x="420" y="244">cgroup.cpu.max · 200ms / 100ms</text>
+</svg>

@@ -1,0 +1,53 @@
+{{ define "main" }}
+<article class="post">
+  <header class="post-head">
+    <span class="post-num">Publicación · {{ .Date.Format "2006" }}</span>
+    <h1 class="post-title">{{ .Title }}</h1>
+    {{- with .Description }}
+    <p class="post-desc">{{ . }}</p>
+    {{- end }}
+    <div class="post-foot">
+      <time class="post-date" datetime="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">{{ .Date.Format "02 Jan 2006" | lower }}</time>
+      {{- if .Site.Params.showReadingTime }}
+      <span class="post-foot-sep">·</span>
+      <span>{{ .ReadingTime }} min</span>
+      {{- end }}
+      {{- if .Site.Params.showWordCount }}
+      <span class="post-foot-sep">·</span>
+      <span>{{ .WordCount }} palabras</span>
+      {{- end }}
+      {{- with .Params.tags }}
+      <span class="post-foot-sep">·</span>
+      <ul class="post-tags">
+        {{- range . }}<li><a href="{{ "/tags/" | relURL }}{{ . | urlize }}">#{{ . }}</a></li>{{ end }}
+      </ul>
+      {{- end }}
+    </div>
+  </header>
+
+  <div class="post-content">
+    {{ .Content }}
+  </div>
+
+  {{- if or .PrevInSection .NextInSection }}
+  <nav class="post-nav">
+    <div class="post-nav-cell">
+      {{- with .PrevInSection }}
+      <a class="post-nav-card" href="{{ .RelPermalink }}">
+        <span class="post-nav-label">← Anterior</span>
+        <span class="post-nav-title">{{ .Title }}</span>
+      </a>
+      {{- end }}
+    </div>
+    <div class="post-nav-cell right">
+      {{- with .NextInSection }}
+      <a class="post-nav-card" href="{{ .RelPermalink }}">
+        <span class="post-nav-label">Siguiente →</span>
+        <span class="post-nav-title">{{ .Title }}</span>
+      </a>
+      {{- end }}
+    </div>
+  </nav>
+  {{- end }}
+</article>
+{{ end }}

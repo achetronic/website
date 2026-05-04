@@ -1,0 +1,121 @@
+/* syntax highlighting — sober, achetronic black
+ * minimal palette: fg, fg-2, fg-3, fg-4 + a very narrow accent for literals */
+.chroma { background: transparent; color: var(--fg-2); }
+
+/* line numbers */
+.chroma .ln,
+.chroma .lnt {
+  color: var(--fg-4);
+  padding-right: 1rem;
+  user-select: none;
+  opacity: 0.5;
+}
+.chroma .hl { background: rgba(255, 255, 255, 0.025); display: block; }
+
+/* keywords, types, control flow */
+.chroma .k,
+.chroma .kc,
+.chroma .kd,
+.chroma .kn,
+.chroma .kp,
+.chroma .kr,
+.chroma .kt {
+  color: var(--fg);
+  font-weight: 500;
+}
+
+/* strings */
+.chroma .s,
+.chroma .s1,
+.chroma .s2,
+.chroma .se,
+.chroma .sb,
+.chroma .sc,
+.chroma .sd,
+.chroma .sh,
+.chroma .si,
+.chroma .sx,
+.chroma .ss,
+.chroma .sr {
+  color: var(--hl);
+}
+
+/* numbers */
+.chroma .mi,
+.chroma .mf,
+.chroma .mh,
+.chroma .mb,
+.chroma .mo,
+.chroma .il {
+  color: var(--hl);
+}
+
+/* functions, methods */
+.chroma .nf,
+.chroma .fm,
+.chroma .nb {
+  color: var(--fg);
+}
+
+/* comments */
+.chroma .c,
+.chroma .cm,
+.chroma .c1,
+.chroma .cp,
+.chroma .cs,
+.chroma .ch {
+  color: var(--fg-4);
+  font-style: italic;
+}
+
+/* operators */
+.chroma .o,
+.chroma .ow {
+  color: var(--fg-3);
+}
+
+/* attributes / properties */
+.chroma .na,
+.chroma .nl,
+.chroma .py {
+  color: var(--fg-2);
+}
+
+/* tags (HTML/XML) */
+.chroma .nt {
+  color: var(--fg);
+}
+
+/* variables, names */
+.chroma .nv,
+.chroma .vc,
+.chroma .vg,
+.chroma .vi,
+.chroma .nx,
+.chroma .nn {
+  color: var(--fg-2);
+}
+
+/* class, namespace */
+.chroma .nc,
+.chroma .no {
+  color: var(--fg);
+}
+
+/* punctuation, generic text */
+.chroma .p,
+.chroma .g,
+.chroma .ge,
+.chroma .gh,
+.chroma .gi,
+.chroma .gp,
+.chroma .gs,
+.chroma .gu {
+  color: var(--fg-2);
+}
+
+/* errors */
+.chroma .err {
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.03);
+}

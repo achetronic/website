@@ -1,0 +1,12 @@
+name = "tty"
+license = "MIT"
+licenselink = "https://github.com/achetronic/website/blob/main/LICENSE"
+description = "Sober editorial Hugo theme for personal tech blogs (light + dark)"
+homepage = "https://github.com/achetronic/website"
+tags = ["minimalist", "editorial", "tech", "blog", "personal"]
+features = ["responsive", "syntax-highlighting", "rss", "light", "dark", "rss-discovery"]
+min_version = "0.128.0"
+
+[author]
+  name = "achetronic"
+  homepage = "https://github.com/achetronic"

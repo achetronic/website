@@ -1,0 +1,47 @@
+# Hugo build artifacts (we want a clean build inside the image)
+public/
+resources/
+.hugo_build.lock
+
+# VCS / CI
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# Editors / OS
+.vscode/
+.idea/
+.fleet/
+.zed/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Agentic / AI tooling local data
+.crush/
+.cursor/
+.aider*
+.continue/
+
+# Docs and scripts not needed inside the image
+README.md
+LICENSE
+Makefile
+.agents/
+
+# Env / secrets (defensive)
+.env
+.env.*
+*.pem
+*.key
+*.crt
+
+# Logs / temp
+*.log
+.tmp/
+tmp/
+
+# Node (just in case)
+node_modules/

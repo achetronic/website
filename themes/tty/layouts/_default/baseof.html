@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode | default "en" }}">
+<head>
+{{- partial "head.html" . -}}
+</head>
+<body class="{{ if .IsHome }}page-home{{ else if eq .Section "posts" }}page-posts{{ else if or (eq .Kind "taxonomy") (eq .Kind "term") }}page-posts{{ else }}page-default{{ end }}">
+<a href="#main" class="skip-link">Saltar al contenido</a>
+{{- if and (eq .Kind "page") (eq .Section "posts") }}
+<div class="reading-progress" aria-hidden="true"></div>
+{{- end }}
+{{- partial "header.html" . -}}
+<main class="content" id="main">
+  {{- block "main" . }}{{- end }}
+</main>
+{{- partial "footer.html" . -}}
+{{- partial "scripts.html" . -}}
+</body>
+</html>

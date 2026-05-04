@@ -1,0 +1,12 @@
+<div class="callout callout-{{ .Get "type" | default "info" }}">
+  <div class="callout-head">
+    {{- $t := .Get "type" | default "info" -}}
+    {{- $icon := "ℹ" -}}
+    {{- if eq $t "warning" }}{{ $icon = "⚠" }}{{ end -}}
+    {{- if eq $t "danger"  }}{{ $icon = "✖" }}{{ end -}}
+    {{- if eq $t "tip"     }}{{ $icon = "✓" }}{{ end -}}
+    <span class="callout-icon">{{ $icon }}</span>
+    <span class="callout-title">{{ .Get "title" | default ($t | title) }}</span>
+  </div>
+  <div class="callout-body">{{ .Inner | $.Page.RenderString }}</div>
+</div>

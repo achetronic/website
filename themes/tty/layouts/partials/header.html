@@ -1,0 +1,28 @@
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="{{ "/" | relURL }}" class="brand" aria-label="achetronic — inicio">
+      <img src="{{ "images/achetronic-mark.png" | relURL }}"
+           alt=""
+           class="brand-mark"
+           width="141" height="170"
+           aria-hidden="true">
+    </a>
+    <nav class="topnav" aria-label="primary">
+      {{- $current := .RelPermalink -}}
+      {{- range .Site.Params.menu -}}
+        {{- $url := .url | relURL -}}
+        {{- $active := false -}}
+        {{- if eq $current $url -}}
+          {{- $active = true -}}
+        {{- else if and (ne $url (relURL "/")) (hasPrefix $current $url) -}}
+          {{- $active = true -}}
+        {{- end -}}
+        <a href="{{ $url }}" class="topnav-link{{ if $active }} active{{ end }}">{{ .name }}</a>
+      {{- end -}}
+      <button type="button" class="theme-toggle" aria-label="Cambiar tema" title="Cambiar tema">
+        <span class="theme-toggle-icon" aria-hidden="true"></span>
+      </button>
+    </nav>
+  </div>
+</header>
+

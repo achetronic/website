@@ -1,0 +1,67 @@
+baseURL: "https://achetronic.com/"
+languageCode: "es-es"
+defaultContentLanguage: "es"
+title: "achetronic"
+theme: "tty"
+
+enableRobotsTXT: true
+enableGitInfo: false
+
+pagination:
+  pagerSize: 10
+
+permalinks:
+  posts: "/posts/:slug/"
+
+taxonomies:
+  tag: "tags"
+  category: "categories"
+  series: "series"
+
+params:
+  author: "achetronic"
+  description: "Bitácora tecnológica sobre backend, SRE, Linux, Kubernetes y demás cacharrería"
+  copyrightYear: 2025
+  showReadingTime: true
+  showWordCount: true
+  # Umami Analytics — website id (public, ok in repo).
+  umamiWebsiteId: "eb1b88a5-cf34-4295-961e-9e0d4c38cdc4"
+  umamiSrc: "https://analytics.public.internal.place/script.js"
+  social:
+    - name: "github"
+      url: "https://github.com/achetronic"
+    - name: "youtube"
+      url: "https://www.youtube.com/@achetronic"
+    - name: "twitter"
+      url: "https://twitter.com/achetronic"
+    - name: "linkedin"
+      url: "https://linkedin.com/in/achetronic"
+    - name: "email"
+      url: "mailto:hola@achetronic.com"
+    - name: "rss"
+      url: "/index.xml"
+  menu:
+    - name: "Inicio"
+      url: "/"
+    - name: "Publicaciones"
+      url: "/posts/"
+
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
+  highlight:
+    style: "monokai"
+    lineNos: false
+    lineNumbersInTable: false
+    noClasses: false
+    tabWidth: 2
+    guessSyntax: true
+
+outputs:
+  home:
+    - HTML
+    - RSS
+  section:
+    - HTML
+    - RSS

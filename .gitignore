@@ -1,0 +1,71 @@
+# Hugo build artifacts
+public/
+resources/_gen/
+.hugo_build.lock
+
+# Hugo cache (kept out of repo)
+/_vendor/
+
+# Local Hugo overrides (devs sometimes drop a hugo.local.yaml)
+hugo.local.yaml
+hugo.local.toml
+
+# Editors / IDE
+.vscode/
+.idea/
+.fleet/
+.zed/
+.nova/
+*.swp
+*.swo
+*.swn
+*~
+.~lock.*
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Env / secrets (defensive — nothing here today, but in case)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+
+# Logs and reports
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+report.*.json
+lhci-reports/
+.lighthouseci/
+
+# Tarballs / artifacts
+*.tgz
+*.tar
+*.tar.gz
+*.zip
+
+# Coverage / temp
+coverage/
+.tmp/
+tmp/
+
+# Agentic / AI tooling local data
+.crush/
+.cursor/
+.aider*
+.continue/
+
+# Node (in case anyone wires linters)
+node_modules/

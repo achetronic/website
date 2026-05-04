@@ -1,0 +1,7 @@
+{{- /*
+  Analytics — only loaded in production builds with a configured website id.
+  Currently: Umami (cookieless, no PII, no consent banner needed).
+*/ -}}
+{{- if and (eq hugo.Environment "production") .Site.Params.umamiWebsiteId .Site.Params.umamiSrc -}}
+<script defer src="{{ .Site.Params.umamiSrc }}" data-website-id="{{ .Site.Params.umamiWebsiteId }}"></script>
+{{- end -}}
