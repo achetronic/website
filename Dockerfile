@@ -3,20 +3,29 @@
 # ---- build stage -------------------------------------------------------------
 ARG HUGO_VERSION=0.155.3
 
-FROM --platform=$BUILDPLATFORM alpine:3.20 AS build
+# Hugo extended ships dynamically linked against glibc, so we use a glibc-based
+# image (debian-slim) to run it. The runtime stage stays on alpine because it's
+# only nginx serving static files there.
+FROM --platform=$BUILDPLATFORM debian:bookworm-slim AS build
 
 ARG HUGO_VERSION
-ARG TARGETARCH
+ARG BUILDARCH
 
-RUN apk add --no-cache curl ca-certificates git \
-    && case "${TARGETARCH}" in \
-         "amd64") HUGO_ARCH="64bit" ;; \
-         "arm64") HUGO_ARCH="ARM64" ;; \
-         *) echo "unsupported arch ${TARGETARCH}" && exit 1 ;; \
-       esac \
-    && curl -fsSL "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-${HUGO_ARCH}.tar.gz" \
-       | tar -xz -C /usr/local/bin hugo \
-    && hugo version
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl ca-certificates git \
+    && rm -rf /var/lib/apt/lists/*
+RUN set -eux; \
+    case "${BUILDARCH}" in \
+      amd64) HUGO_ARCH="64bit" ;; \
+      arm64) HUGO_ARCH="ARM64" ;; \
+      *) echo "unsupported build arch ${BUILDARCH}" >&2; exit 1 ;; \
+    esac; \
+    URL="https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-${HUGO_ARCH}.tar.gz"; \
+    echo "Downloading ${URL}"; \
+    curl -fsSL -o /tmp/hugo.tar.gz "${URL}"; \
+    tar -xzf /tmp/hugo.tar.gz -C /usr/local/bin hugo; \
+    rm /tmp/hugo.tar.gz; \
+    hugo version
 
 WORKDIR /src
 COPY . .
