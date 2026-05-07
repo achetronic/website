@@ -26,7 +26,7 @@ params:
   showWordCount: true
   # Umami Analytics — website id (public, ok in repo).
   umamiWebsiteId: "eb1b88a5-cf34-4295-961e-9e0d4c38cdc4"
-  umamiSrc: "https://analytics.public.internal.place/script.js"
+  umamiSrc: "https://analytics.achetronic.com/script.js"
   social:
     - name: "github"
       url: "https://github.com/achetronic"
