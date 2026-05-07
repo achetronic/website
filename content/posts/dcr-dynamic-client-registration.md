@@ -3,7 +3,7 @@ title: "DCR, el estándar OAuth que se nos coló por casa"
 slug: "dcr-dynamic-client-registration"
 date: 2026-05-04T12:00:00+02:00
 lastmod: 2026-05-04T12:00:00+02:00
-draft: true
+draft: false
 description: "Qué es Dynamic Client Registration, cómo lo aprovecha MCP para que cualquier IDE se autentique solo, y por qué dejaba la base de datos hecha unos zorros."
 tags:
   - "oauth2"
