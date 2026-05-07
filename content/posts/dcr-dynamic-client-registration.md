@@ -21,14 +21,13 @@ Vas al panel de admin, rellenas el formulario, copias el `client_id`, lo pegas e
 
 DCR (Dynamic Client Registration) nació para que esa fricción dejara de ser tu problema.
 
-Y luego MCP (Model Context Protocol) lo adoptó porque tenía sentido. Y luego DCR nos empezó a llenar la base de datos de clientes huérfanos como quien rellena un cubo con palomitas en el cine.
+Y luego, MCP (Model Context Protocol) lo adoptó porque tenía sentido. Y luego, DCR nos empezó a llenar la base de datos de clientes huérfanos como quien rellena un cubo con palomitas en el cine.
 
 Pero vamos por partes.
 
-
 ## Qué es DCR
 
-DCR está definido en la [RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591) y, en cuatro palabras, dice esto: **un cliente OAuth puede registrarse a sí mismo** haciendo una petición HTTP a un endpoint del proveedor de identidad.
+DCR son las siglas de Dynamic Client Registration. Está definido en el [RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591) y, en cuatro palabras, dice esto: **un cliente OAuth puede registrarse a sí mismo** haciendo una petición HTTP a un endpoint del proveedor de identidad.
 
 Sin formularios, sin tickets a SRE, sin esperar a que un admin esté de buenas.
 
@@ -60,50 +59,41 @@ El servidor responde con algo así:
 }
 ```
 
-Y ya está.
-
-El cliente tiene su identidad. Puede iniciar el flujo de autorización como cualquier otra app de toda la vida. Si más adelante necesita actualizar sus datos, usa el `registration_access_token` y modifica su propio registro.
+Y básicamente, ya está. El cliente tiene su identidad. Puede iniciar el flujo de autorización como cualquier otra app de toda la vida. Si más adelante necesita actualizar sus datos, usa el `registration_access_token` y modifica su propio registro.
 
 Sobre el papel pinta bien.
 
-
 ## Por qué MCP dijo que sí
 
-[Model Context Protocol](https://modelcontextprotocol.io/) es el estándar que están empujando Anthropic y compañía para que los IDEs y agentes (Claude, Cursor, VS Code con su Copilot, lo que sea) hablen con servidores MCP: tu base de datos, tu Jira, tu Confluence interno, tu cluster de Kubernetes.
+[Model Context Protocol](https://modelcontextprotocol.io/) es el estándar que están promoviendo Anthropic y compañía para que los IDEs y agentes (Claude, Cursor, VS Code con su Copilot, lo que sea) hablen con sistemas externos: tu base de datos, tu Jira, tu Confluence interno, tu cluster de Kubernetes.
 
-La idea es que tú expones un servidor MCP en tu empresa, y cualquier herramienta del usuario se conecta y consume datos contextualizados.
-
-¿Y cómo se identifica esa herramienta? OAuth 2.0.
+La idea es que tú expones un servidor MCP en tu empresa, y cualquier herramienta del usuario se conecta con ese protocolo y consume datos contextualizados. ¿Contextualiqué? Nada, que los lee tu agente de IA favorito usando ese protocolo. ¿Y cómo se identifica esa herramienta? OAuth 2.0.
 
 Pero claro, aquí entra el detalle que le dio sentido a DCR: el servidor MCP **no sabe quién va a conectarse**. Hoy es VS Code, mañana es Cursor, pasado es un IDE que ni existe todavía.
-
 Pedirle al admin del Keycloak que dé de alta un cliente nuevo cada vez que sale un editor en Hacker News es absurdo.
 
-La salida natural es que el cliente se registre solo. Que cada IDE, la primera vez que un usuario conecte, lance su `POST` y le devolvamos un `client_id`.
-
+La solución natural es que el cliente se registre solo. Que cada IDE, la primera vez que un usuario conecte, lance su `POST` y le devolvamos un `client_id`.
 El usuario no se entera, el IDE no se entera, y SRE no se entera, que es como deben ser las cosas que funcionan bien.
 
-Las primeras versiones del estándar MCP se basaron en esto. Y durante un tiempo fue la solución más limpia.
-
+Las primeras versiones del estándar MCP se basaron en esto. Y durante un tiempo fue la solución más limpia. Pero espera, que se viene salseo.
 
 ## El defecto que nadie vio venir (o sí, pero hicimos como que no)
 
 Aquí viene la parte interesante, que es por la que probablemente has llegado a este post.
 
-Imagina la siguiente escena, que no es ficción, es lo que vimos en producción:
+Imagina la siguiente escena, que no es ficción, es lo que pasa en producción:
 
-1. Un dev instala Cursor. El IDE hace `POST` al endpoint de registro. Keycloak crea un cliente. ID generado: `aa11`.
-2. El dev se cabrea con Cursor (le pasa a todo el mundo), borra la caché. Vuelve a abrir. Se vuelve a registrar. ID nuevo: `bb22`.
-3. Cambia de portátil. Otro registro. `cc33`.
-4. Reinstala el sistema operativo porque jugaba con Nix. `dd44`.
+1. Un dev instala Cursor. El IDE hace `POST` al endpoint de registro. Keycloak crea un cliente. ID generado: `cliente-1`.
+2. El dev se cabrea con Cursor (le pasa a todo el mundo), borra la caché. Vuelve a abrir. Se vuelve a registrar. ID nuevo: `cliente-2`.
+3. Cambia de portátil. Otro registro. `cliente-3`.
+4. Reinstala el sistema operativo porque jugaba con Nix. `cliente-4`.
 5. Multiplica esto por 200 desarrolladores en la empresa.
 6. Multiplica por todos los IDEs distintos que cada uno prueba en una semana.
+7. Multiplica esto por los usuarios de Magnific (anteriormente Freepik) si el MCP es para todos sus usuarios.
 
 Y así acabas con **una base de datos llena de clientes OAuth fantasma**.
-
 Nunca se vuelven a usar, ocupan espacio, ralentizan queries en la tabla `client`, ensucian los logs y, si te pones tiquismiquis con la auditoría, complican entender qué hay vivo y qué no.
-
-Le llamamos *clientes basura*, que es como llamamos cariñosamente a estas cosas en el gremio.
+Le llamamos _clientes basura_, que es como llamamos cariñosamente a estas cosas en el gremio.
 
 ¿Se puede limpiar? Sí, hay endpoints de des-registro y se puede tener un cronjob que purgue los que llevan X días sin tocarse. Pero eso significa:
 
@@ -111,10 +101,7 @@ Le llamamos *clientes basura*, que es como llamamos cariñosamente a estas cosas
 - Decidir cuánto tiempo es "muerto" sin pillar a alguien que sí volverá la semana que viene.
 - Tener cuidado de no borrar el del compañero que está de baja.
 
-Y todo esto para resolver un problema que **no debería existir**.
-
-El cliente "VS Code", lógicamente, es **uno**. No 14 000.
-
+Y todo esto para resolver un problema que **no debería existir** porque el cliente "VS Code", lógicamente, es **uno**. No 14.000.
 
 ## Y luego está el otro problema: cualquiera puede registrarse
 
@@ -129,7 +116,7 @@ Keycloak, para que conste, **sí tiene policies decentes para DCR**. Puedes conf
 
 Pero hay una pega importante con el filtrado por IP en Keycloak: **solo entiende de IPs sueltas, no de bloques CIDR**. Y Anthropic, OpenAI y compañía publican rangos enormes con notación `/16`, `/20`, lo que sea.
 
-Si quieres autorizar `104.21.0.0/16` desde Keycloak tienes dos opciones, ambas malas: o expandes el CIDR a las 65 536 IPs y se lo metes una a una al endpoint de policies (que se va a quejar y con razón), o renuncias a filtrar por IP en el IdP.
+Si quieres autorizar `104.21.0.0/16` desde Keycloak tienes dos opciones, ambas malas: o expandes el CIDR a las 65.536 IPs y se lo metes una a una al endpoint de policies (que se va a quejar y con razón), o renuncias a filtrar por IP en el IdP.
 
 El sitio natural para esto es el ingress, porque el ingress sí habla TCP/IP de verdad y entiende de CIDRs sin parpadear. En nuestro caso lo hace Istio con un `AuthorizationPolicy` que vive fuera de Keycloak. Si tu IP no está en la lista, te llevas un `403 Forbidden` antes de que la petición huela el pod del IdP.
 
@@ -152,8 +139,9 @@ spec:
         - source:
             ipBlocks:
               # rangos publicados por proveedores
-              - 160.79.104.0/23   # Anthropic
-              - 104.21.0.0/16     # alguna saca de OpenAI
+              - 160.79.104.0/23 # Anthropic
+              - 104.21.0.0/16 # Alguna saca de OpenAI
+
               # IP fija del NAT de la oficina
               - 81.45.32.7/32
 ```
@@ -169,14 +157,13 @@ Pero **OpenAI cambia rangos como quien cambia de calcetines**, y los publica en 
 
 Y cuando OpenAI decida un día publicar el JSON con otro formato sin avisar, el script peta y te enteras un viernes a las 19:00 porque algún dev no puede usar Codex.
 
-
 ## ¿Entonces DCR está muerto?
 
 No. Para nada.
 
 Y aquí hay dos cosas que importan a la vez.
 
-La primera: para la mayoría de casos nuevos, **DCR no es la herramienta adecuada**. Para el patrón "miles de instalaciones del mismo IDE pidiendo cada una su clientazo", lo que tiene sentido es CIMD, que cuento en [el siguiente post](/posts/cimd-client-id-metadata-document/).
+La primera: para la mayoría de casos nuevos, **DCR no es la herramienta adecuada**. Para el patrón "miles de instalaciones del mismo IDE pidiendo cada una su clientazo", lo que tiene sentido es CIMD, que te lo cuento en la siguiente publicación.
 
 Pero la segunda es que **DCR sigue muy vivo**, y va a seguir vivo durante un buen rato. Hay varios motivos.
 
@@ -188,18 +175,16 @@ Por eso lo que vemos en la práctica es una convivencia: **CIMD como estándar m
 
 Esto significa que vas a tener los dos endpoints abiertos durante meses, probablemente años. Y el de DCR, sí o sí, blindado a nivel de red.
 
-
 ## Tres aprendizajes que me llevo de toda esta historia
 
-1. **Esto se veía venir desde la beta.** En cuanto vi en mi entorno de pruebas que cada cliente se creaba como un churrele recién hecho cada vez que tocabas algo, dije "esto explota". Si un protocolo genera basura por diseño, mal vamos.
+1. **Esto se veía venir desde la beta.** En cuanto vi, en mi entorno de pruebas, que cada cliente se creaba como un churrele recién hecho cada vez que tocabas algo, dije "esto explota". Si un protocolo genera basura por diseño, mal vamos.
 
 2. **Algunos proveedores no publican bloques CIDR de salida**, y eso choca de frente con DCR. No puedes filtrar por origen con seriedad si el origen es opaco. Y dejar el endpoint de DCR abierto a internet entera es un error de novato, y no quieres ser novato con algo tan delicado como esto.
 
 3. **Keycloak está adoptando estos protocolos antes que casi nadie.** DCR, CIMD, todas las extensiones de OAuth/OIDC que van saliendo, las suele tener implementadas y soportadas mucho antes que los productos comerciales. Si quieres un IdP potente, open source, y que te aguante las novedades del estándar sin tener que pagarle a nadie por adelantado, Keycloak es la elección natural.
 
-
 Si vas a montar algo nuevo en 2026 hablando MCP, te jodes: te comes DCR y CIMD.
 
 En un año probablemente con CIMD tengas suficiente (si no sale alguna otra idea portentosa de la cabeza de algún portentoso).
 
-PD: Lee el [artículo sobre CIMD](/posts/cimd-client-id-metadata-document/), anda guapo.
+PD: Ven en unos días para leer sobre el CIMD, anda guapetoncio (o el piropo persuasivo que te guste más).
