@@ -54,7 +54,7 @@ Y ese JSON tiene esta pinta:
 }
 ```
 
-Cuando el plugin de VS Code inicia el flujo de autorización contra Keycloak, en vez de mandarte un `client_id` random, te manda **la URL del JSON** como `client_id`. Literalmente. El parámetro `client_id` de la petición OAuth contiene `https://vscode.dev/oauth/client-metadata.json`.
+Ahora imagina que eres la otra parte implicada: serás Keycloak. ¿que quién es Keycloak? el policía que audita flujos y autentifica personas, más conocido como IdP entre los que nos dedicamos a esto. Cuando el plugin de VS Code inicia el flujo de autorización contra ti, en vez de mandarte un `client_id` random, te manda **la URL del JSON** como `client_id`. Literalmente. El parámetro `client_id` de la petición OAuth contiene `https://vscode.dev/oauth/client-metadata.json`.
 
 ```http
 GET /realms/mi-realm/protocol/openid-connect/auth
@@ -69,15 +69,15 @@ GET /realms/mi-realm/protocol/openid-connect/auth
 
 Keycloak ve esa URL, va a internet, **descarga el JSON**, valida que tiene lo que tiene que tener (`client_name`, `redirect_uris`, etc.) y crea un cliente **en memoria** (o en BBDD pero con TTL) usando esa URL como identificador único.
 
-Y aquí viene lo bonito: la próxima vez que **otro usuario de VS Code en otra punta del mundo** se conecte, la URL es la misma. Keycloak ya tiene ese cliente cacheado. No crea uno nuevo. Adiós para siempre al cubo de palomitas.
+Y aquí viene lo bonito: la próxima vez que **otro usuario de VS Code en otra punta del mundo** se conecte, la URL es la misma. Keycloak ya tiene ese cliente cacheado, no crea uno nuevo. Adiós para siempre al cubo de palomitas.
 
 ## Lo bueno
 
-**Una identidad por aplicación, no por usuario.** Esto es el cambio gordo. Antes, "VS Code" eran 17 000 clientes en BBDD. Ahora "VS Code" es 1 cliente, y es la URL que VS Code mismo declara. Si mañana sale un nuevo IDE y tiene su JSON publicado, no tienes que hacer nada para que se autentique con tu Keycloak. Cero tickets a SRE.
+**Una identidad por aplicación, no por usuario.** Esto es el cambio gordo. Antes, "VS Code" eran 17.000 clientes en BBDD. Ahora "VS Code" es 1 cliente, y es la URL que VS Code mismo declara. Si mañana sale un nuevo IDE y tiene su JSON publicado, no tienes que hacer nada para que se autentique con tu Keycloak. Cero tickets a SRE.
 
-**El cliente es responsable de su propia identidad.** Si VS Code cambia un `redirect_uri`, edita su JSON. Keycloak descargará la nueva versión cuando expire la caché. Tú, como administrador, no te enteras. Lo cual es lo que quieres.
+**El cliente es responsable de su propia identidad.** Si VS Code cambia un `redirect_uri`, edita su JSON. Keycloak descargará la nueva versión cuando expire la caché. Tú, como administrador, no te enteras, que es justo lo que quieres.
 
-**Caché controlado por quien publica.** El JSON se sirve con cabeceras HTTP normales (`Cache-Control`, `ETag`, `Last-Modified`). El proveedor del cliente decide cuánto tiempo de vida tiene su descripción. Tu Keycloak respeta eso. Es la web de toda la vida funcionando sola.
+**Caché controlado por quien publica.** El JSON se sirve con cabeceras HTTP normales (`Cache-Control`, `ETag`, `Last-Modified`). El proveedor del cliente decide cuánto tiempo de vida tiene su descripción y tu Keycloak respeta eso. Es la web de toda la vida funcionando sola.
 
 **Auditable.** El `client_id` es una URL real que un humano puede abrir y ver. Si un día te encuentras un cliente sospechoso en los logs, abres la URL y juzgas. Es muchísimo mejor que un UUID `9f3a1e8c-7b22-4d11-bf66-2a4d1f0e7a98` del que solo Dios sabe a qué app pertenece.
 
@@ -89,17 +89,17 @@ No todo es color de rosa. Vamos con el lado feo.
 
 **Acabas haciendo HTTP saliente desde Keycloak.** Tu IdP, que antes era una caja cerrada que solo recibía peticiones, ahora **sale a internet** a buscar JSONs. Esto abre la puerta a ataques **SSRF** (Server-Side Request Forgery): un atacante te manda como `client_id` algo como `http://169.254.169.254/latest/meta-data/` (la IP mágica de AWS para meterte en el servicio interno de credenciales del nodo) y, si no validas la URL, tu Keycloak se lo trae alegremente y filtra credenciales del cluster. **Estás obligado a poner una lista blanca de dominios permitidos.**
 
-**El JSON puede mentir o cambiar.** Si VS Code publica hoy un JSON limpio y mañana lo modifica para apuntar `redirect_uri` a un dominio chungo, todos los usuarios que tengan caché viejo aún funcionan, pero los nuevos pasan por el dominio comprometido. La validación en cada descarga es **obligatoria**, no opcional.
+**El JSON puede mentir o cambiar.** Si VS Code publica hoy un JSON limpio y mañana lo modifica para apuntar `redirect_uri` a un dominio chungo, todos los usuarios que tengan caché viejo aún funcionarán, pero los nuevos pasarán por el dominio comprometido, así que la validación en cada descarga es **obligatoria**, no opcional.
 
 **Dependencia de internet.** Si vscode.dev cae justo cuando tu Keycloak intenta refrescar la caché, tienes un bonito error 5xx. Hay que cachear de forma agresiva y guardar el último JSON válido como red de seguridad. Esto añade complejidad operativa que antes no existía.
 
-**Las URIs internas del JSON también son superficie de ataque.** El JSON puede declarar un `logo_uri`, un `tos_uri`, un `policy_uri`, un `jwks_uri`... y todas esas URIs **deben validarse**. Si el JSON está alojado en `vscode.dev` (en la lista blanca) pero el logo apunta a `evil.com/te-estoy-vigilando.png`, has dejado entrar un canal lateral.
+**Las URIs internas del JSON también son superficie de ataque.** El JSON puede declarar un `logo_uri`, un `tos_uri`, un `policy_uri`, un `jwks_uri`... y todas esas URIs **deben validarse**. Si el JSON está alojado en `vscode.dev` (en la lista blanca), pero el logo apunta a `evil.com/te-estoy-vigilando.png`, has dejado entrar un canal lateral.
 
 ## Antes de empezar: activar la feature
 
-Detalle importantísimo que te puede arruinar la tarde si no lo sabes: a día de hoy, **CIMD en Keycloak es una feature en preview**. Hay que activarla a mano. Por defecto viene apagada.
+Hay un súper detalle importantísimo que te puede arruinar la tarde si no lo sabes: a día de hoy, **CIMD en Keycloak es una feature en preview**. Por defecto viene apagada, así que hay que activarla a mano.
 
-Tienes dos formas de hacerlo. Por flag al arrancar Keycloak:
+Tienes dos formas de hacerlo. Por flag, al arrancar Keycloak:
 
 ```bash
 kc.sh start --features=cimd
@@ -113,18 +113,17 @@ KC_FEATURES=cimd
 
 (O añadiéndolo a la lista de features que ya tengas activadas, separadas por comas.)
 
-Si no la activas, los menús de Client Policies que voy a contar más abajo simplemente **no aparecen**. Te vas a quedar buscándolos durante un rato pensando que estás loco. Te lo aviso ahora.
-
+Si no la activas, los menús de Client Policies que voy a contar más abajo, simplemente **no aparecen**. Te vas a quedar buscándolos durante un rato pensando que estás loco. Te lo aviso ahora.
 
 ## Cómo se monta esto seguro en Keycloak
 
 En Keycloak la cosa se monta con **Client Policies**. Se configuran a nivel de **Realm**, dentro del menú **Realm Settings → Client Policies**, donde tienes dos pestañas: **Profiles** y **Policies**.
 
-Hay dos componentes que trabajan en cadena, y nosotros los llamamos *el portero* y *el inspector técnico*, porque le pone color a las pizarras del onboarding.
+Hay dos componentes que trabajan en cadena, y nosotros los llamamos _el portero_ y _el inspector técnico_, porque le pone color a las pizarras del onboarding.
 
 ### El portero: la Policy
 
-Te vas a la pestaña **Policies** y creas una nueva, por ejemplo `cimd-policy`. Esta Policy mira las peticiones de login que llegan y filtra si "esto huele a CIMD" antes incluso de descargar el JSON.
+Te vas a la pestaña **Policies** y creas una nueva, por ejemplo `cimd-policy`. Esta Policy mira las peticiones de login que llegan y filtra si "esto huele a CIMD" antes, incluso, de descargar el JSON.
 
 - ¿El `client_id` es una URL HTTPS válida? Si no, fuera.
 - ¿El dominio de esa URL está en mi lista blanca (`client-id-uri-allow-permitted-domains`)? Si no, fuera.
@@ -174,13 +173,13 @@ Hay otra cosa que mola: **CIMD encaja con la web tal y como existe**. No requier
 ## Lo que creo que pasará en los próximos 18 meses
 
 - Los IDEs grandes (VS Code, Cursor, Claude Desktop, JetBrains) van a tener su CIMD publicado de serie. Algunos ya lo hacen.
-- Alguien intentará hacer un ataque SSRF muy creativo. Saldrá un CVE. Todos pondremos nuestras whitelists al día y juraremos que ya las teníamos así.
-- DCR se quedará para los casos en los que el cliente es genuinamente único (integraciones corporativas). El 95% del tráfico MCP irá por CIMD.
+- Alguien intentará hacer un ataque SSRF muy creativo y saldrá un CVE. Luego todos pondremos nuestras whitelists al día y juraremos que ya las teníamos así.
+- DCR se quedará para los casos en los que el cliente es genuinamente único (integraciones corporativas), por lo que el 95% del tráfico MCP irá por CIMD.
 
 ## Para terminar
 
-CIMD es un buen ejemplo de que **a veces el problema no se resuelve con más código sino con menos**. DCR generaba basura porque cada cliente generaba un registro. CIMD no genera basura porque cada *aplicación* es un registro único, decidido por el dueño de la aplicación. Es el mismo problema mirado desde otro ángulo, y la solución encaja con cómo funciona la web de toda la vida.
+CIMD es un buen ejemplo de que, **a veces, el problema no se resuelve con más código sino con menos**. DCR generaba basura porque cada cliente generaba un registro. CIMD no genera basura porque cada _aplicación_ es un registro único, decidido por el dueño de la aplicación. Es el mismo problema mirado desde otro ángulo, y la solución encaja con cómo funciona la web de toda la vida.
 
 Si estás montando algo nuevo en MCP, este es el camino. Si tienes DCR funcionando, no migres por modas, pero ten claro que el spec va para aquí.
 
-Y si te encuentras con que el inspector técnico te bloquea porque el logo del IDE está en otro dominio, respira hondo. Le pasa a todos. La primera vez es una hora, la segunda son cinco minutos.
+Y si te encuentras con que el inspector técnico te bloquea porque el logo del IDE está en otro dominio, respira hondo, le pasa a todos. La primera vez es una hora, la segunda son cinco minutos.
