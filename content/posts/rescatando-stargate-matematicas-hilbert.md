@@ -2,7 +2,7 @@
 title: "Rescatando Stargate a base de matemáticas (y envolventes de Hilbert)"
 slug: "rescatando-stargate-matematicas-hilbert"
 date: 2026-06-08T10:00:00+01:00
-draft: true
+draft: false
 description: "Cómo usar procesamiento de señales para sincronizar automáticamente audios de distintos idiomas en un vídeo y por qué la IA no sirve para esto."
 tags:
   - "ffmpeg"
