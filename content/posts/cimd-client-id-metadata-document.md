@@ -3,7 +3,7 @@ title: "CIMD: adiós al infierno del Dynamic Client Registration"
 slug: "cimd-client-id-metadata-document"
 date: 2026-05-04T13:00:00+02:00
 lastmod: 2026-05-04T13:00:00+02:00
-draft: true
+draft: false
 description: "Client ID Metadata Document: la respuesta del estándar MCP al desastre de DCR. Cómo funciona, por qué duerme tranquilo el equipo de SRE, y qué hace falta para que sea seguro."
 tags:
   - "oauth2"
